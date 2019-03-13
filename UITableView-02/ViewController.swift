@@ -40,9 +40,7 @@ class ViewController: UIViewController {
         messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 120)!, message: "Hello world 2"))
         messages.append(Message(from: "1", to: "2", timestamp: TimeInterval.init(exactly: 140)!, message: "Hello world 3"))
         messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 160)!, message: "Hello world 4"))
-        
-        tblMessage.transform = CGAffineTransform(scaleX: 1, y: -1)
-        tblMessage.isEditing = true
+        messages = messages.sorted{ $0.timestamp <= $1.timestamp }
         
         let attributes = [NSAttributedString.Key.font: UIFont(name: "Arial", size: 25)!, NSAttributedString.Key.foregroundColor: UIColor.gray]
         let attributedString = NSAttributedString(string: "⤒", attributes: attributes)
@@ -62,9 +60,8 @@ class ViewController: UIViewController {
         tblMessage.reloadData()
         txvMessageContent.text = ""
         btnSend.isEnabled = false
+        tblMessage.scrollToRow(at: IndexPath(row: self.messages.count-1, section: 0), at: .bottom, animated: false)
     }
-    
-    
 }
 extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -76,16 +73,13 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let sortedMessages = messages.sorted{ $0.timestamp > $1.timestamp }
-        if (sortedMessages[indexPath.row].from == myNumber) {
+        if (messages[indexPath.row].from == myNumber) {
             let cell = tableView.dequeueReusableCell(withIdentifier: "sendingcell", for: indexPath) as! sendingMessageCell
-            cell.lblMessage.text = sortedMessages[indexPath.row].message
-            cell.transform = CGAffineTransform(scaleX: 1, y: -1)
+            cell.lblMessage.text = messages[indexPath.row].message
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "receivingcell", for: indexPath) as! receivingMessageCell
-            cell.lblMessage.text = sortedMessages[indexPath.row].message
-            cell.transform = CGAffineTransform(scaleX: 1, y: -1)
+            cell.lblMessage.text = messages[indexPath.row].message
             return cell
         }
     }
@@ -94,20 +88,47 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
         tableView.deselectRow(at: indexPath, animated: false)
     }
     
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { (action, view, handler) in
+            let alert = UIAlertController(title: "Edit", message: "You are on Edit-mode", preferredStyle: .alert)
+            alert.addTextField(configurationHandler: { (txtField) in
+                txtField.placeholder = "Message"
+                txtField.text = self.messages[indexPath.row].message
+            })
+            let btnSave = UIAlertAction(title: "Save", style: .default, handler: { (action) in
+                self.messages[indexPath.row].message = alert.textFields?[0].text
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+                handler(true)
+            })
+            let btnCancel = UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
+                handler(false)
+            })
+            alert.addAction(btnSave)
+            alert.addAction(btnCancel)
+            self.present(alert, animated: true, completion: nil)
+        }
+        //editAction.image = UIImage(named: "edit")
+        editAction.backgroundColor = UIColor.blue
+        
+        let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, handler) in
+            self.messages.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            handler(true)
+        }
+        //deleteAction.image = UIImage(named: "delete")
+        deleteAction.backgroundColor = UIColor.red
+        return UISwipeActionsConfiguration(actions: [editAction, deleteAction])
+    }
+    
     func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
         return true
     }
     
-    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-        return .none
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        let movedElement = messages[sourceIndexPath.row]
+        messages.remove(at: sourceIndexPath.row)
+        messages.insert(movedElement, at: destinationIndexPath.row)
     }
-    func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-    
-//    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-//        let movedElement = tableView.cellForRow(at: sourceIndexPath)
-//    }
     
     func textViewDidChange(_ textView: UITextView) {
         if textView.text.count > 0 {
@@ -115,5 +136,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
         } else {
             btnSend.isEnabled = false
         }
+        self.tblMessage.scrollToRow(at: IndexPath(row: self.messages.count-1, section: 0), at: .bottom, animated: false)
     }
 }
