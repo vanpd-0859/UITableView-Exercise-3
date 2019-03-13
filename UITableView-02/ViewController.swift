@@ -36,11 +36,16 @@ class ViewController: UIViewController {
         topBoder.backgroundColor = UIColor.groupTableViewBackground.cgColor
         viewMessage.layer.addSublayer(topBoder)
         
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
         messages.append(Message(from: "1", to: "2", timestamp: TimeInterval.init(exactly: 100)!, message: "Hello world 1"))
         messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 120)!, message: "Hello world 2"))
         messages.append(Message(from: "1", to: "2", timestamp: TimeInterval.init(exactly: 140)!, message: "Hello world 3"))
         messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 160)!, message: "Hello world 4"))
         messages = messages.sorted{ $0.timestamp <= $1.timestamp }
+        
+        tblMessage.transform = CGAffineTransform(scaleX: 1, y: -1)
         
         let attributes = [NSAttributedString.Key.font: UIFont(name: "Arial", size: 25)!, NSAttributedString.Key.foregroundColor: UIColor.gray]
         let attributedString = NSAttributedString(string: "⤒", attributes: attributes)
@@ -51,6 +56,8 @@ class ViewController: UIViewController {
         btnSend.setAttributedTitle(attributedEnableString, for: .normal)
         btnSend.isEnabled = false
         
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapGesture(sender:)))
+        view.addGestureRecognizer(tap)
     }
     
     //MARK: Actions
@@ -60,7 +67,25 @@ class ViewController: UIViewController {
         tblMessage.reloadData()
         txvMessageContent.text = ""
         btnSend.isEnabled = false
-        tblMessage.scrollToRow(at: IndexPath(row: self.messages.count-1, section: 0), at: .bottom, animated: false)
+    }
+    
+    @objc func keyboardWillShow(notification: NSNotification) {
+        guard let keyboardSize = ((notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey]) as? NSValue)?.cgRectValue else {
+            return
+        }
+        if self.view.frame.origin.y == 0 {
+            self.view.frame.origin.y -= keyboardSize.height
+        }
+    }
+    
+    @objc func keyboardWillHide(notification: NSNotification) {
+        if self.view.frame.origin.y != 0 {
+            self.view.frame.origin.y = 0
+        }
+    }
+    
+    @objc func tapGesture(sender: Any) {
+        view.endEditing(true)
     }
 }
 extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextViewDelegate {
@@ -73,13 +98,17 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if (messages[indexPath.row].from == myNumber) {
+        if (messages[messages.count-indexPath.row-1].from == myNumber) {
             let cell = tableView.dequeueReusableCell(withIdentifier: "sendingcell", for: indexPath) as! sendingMessageCell
-            cell.lblMessage.text = messages[indexPath.row].message
+            cell.lblMessage.text = messages[messages.count-indexPath.row-1].message
+            cell.transform = CGAffineTransform(scaleX: 1, y: -1)
+            //cell.accessoryType = .disclosureIndicator
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "receivingcell", for: indexPath) as! receivingMessageCell
-            cell.lblMessage.text = messages[indexPath.row].message
+            cell.lblMessage.text = messages[messages.count-indexPath.row-1].message
+            cell.transform = CGAffineTransform(scaleX: 1, y: -1)
+            //cell.accessoryType = .disclosureIndicator
             return cell
         }
     }
@@ -93,10 +122,10 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
             let alert = UIAlertController(title: "Edit", message: "You are on Edit-mode", preferredStyle: .alert)
             alert.addTextField(configurationHandler: { (txtField) in
                 txtField.placeholder = "Message"
-                txtField.text = self.messages[indexPath.row].message
+                txtField.text = self.messages[self.messages.count-indexPath.row-1].message
             })
             let btnSave = UIAlertAction(title: "Save", style: .default, handler: { (action) in
-                self.messages[indexPath.row].message = alert.textFields?[0].text
+                self.messages[self.messages.count-indexPath.row-1].message = alert.textFields?[0].text
                 tableView.reloadRows(at: [indexPath], with: .automatic)
                 handler(true)
             })
@@ -111,7 +140,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
         editAction.backgroundColor = UIColor.blue
         
         let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, handler) in
-            self.messages.remove(at: indexPath.row)
+            self.messages.remove(at: self.messages.count-indexPath.row-1)
             tableView.deleteRows(at: [indexPath], with: .automatic)
             handler(true)
         }
@@ -125,9 +154,20 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
     }
     
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let movedElement = messages[sourceIndexPath.row]
-        messages.remove(at: sourceIndexPath.row)
-        messages.insert(movedElement, at: destinationIndexPath.row)
+        let movedElement = messages[messages.count-sourceIndexPath.row-1]
+        messages.remove(at: messages.count-sourceIndexPath.row-1)
+        messages.insert(movedElement, at: messages.count-destinationIndexPath.row-1)
+    }
+    
+    func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
+        for view in tblMessage.subviews {
+            if String(describing: type(of: view)) == "UISwipeActionPullView" {
+                let deleteButton = view.subviews[0]
+                let editButton = view.subviews[1]
+                editButton.transform = CGAffineTransform(scaleX: 1, y: -1)
+                deleteButton.transform = CGAffineTransform(scaleX: 1, y: -1)
+            }
+        }
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -136,6 +176,5 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
         } else {
             btnSend.isEnabled = false
         }
-        self.tblMessage.scrollToRow(at: IndexPath(row: self.messages.count-1, section: 0), at: .bottom, animated: false)
     }
 }

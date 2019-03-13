@@ -133,7 +133,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="5j6-oA-0SH" firstAttribute="top" secondItem="7Qz-BZ-iCP" secondAttribute="top" id="1TO-BH-LUP"/>
-                            <constraint firstItem="atz-co-9Sc" firstAttribute="bottom" secondItem="7Qz-BZ-iCP" secondAttribute="bottom" id="7gy-F6-kHw"/>
+                            <constraint firstItem="atz-co-9Sc" firstAttribute="bottom" secondItem="7Qz-BZ-iCP" secondAttribute="bottom" priority="999" id="7gy-F6-kHw"/>
                             <constraint firstItem="5j6-oA-0SH" firstAttribute="leading" secondItem="7Qz-BZ-iCP" secondAttribute="leading" id="GII-XG-GR9"/>
                             <constraint firstItem="atz-co-9Sc" firstAttribute="trailing" secondItem="7Qz-BZ-iCP" secondAttribute="trailing" id="Iyf-6H-33j"/>
                             <constraint firstItem="atz-co-9Sc" firstAttribute="top" secondItem="5j6-oA-0SH" secondAttribute="bottom" id="WPA-cF-b9O"/>
