@@ -14,10 +14,14 @@ class ViewController: UIViewController {
     @IBOutlet weak var tblMessage: UITableView!
     @IBOutlet weak var txvMessageContent: UITextView!
     @IBOutlet weak var btnSend: UIButton!
+    var mockMessage: MockMessage!
     var messages = [Message]()
+    var limit = 15
+    var page = 1
     var myNumber = "1"
     var friendNumber = "2"
     @IBOutlet weak var viewMessage: UIView!
+    var spinner: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,6 +35,14 @@ class ViewController: UIViewController {
         txvMessageContent.delegate = self
         txvMessageContent.textContainerInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         
+        mockMessage = MockMessage()
+        if let addMessage = self.mockMessage.getMessage(limit: limit, page: page), !addMessage.isEmpty {
+            print(limit, page)
+            print(mockMessage.serverMessage)
+            self.messages += addMessage
+            self.messages = self.messages.sorted{ $0.timestamp <= $1.timestamp }
+            page += 1
+        }
         let topBoder = CALayer()
         topBoder.frame = CGRect(x: 0, y: 0, width: viewMessage.frame.size.width, height: 1)
         topBoder.backgroundColor = UIColor.groupTableViewBackground.cgColor
@@ -38,12 +50,6 @@ class ViewController: UIViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-        
-        messages.append(Message(from: "1", to: "2", timestamp: TimeInterval.init(exactly: 100)!, message: "Hello world 1"))
-        messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 120)!, message: "Hello world 2"))
-        messages.append(Message(from: "1", to: "2", timestamp: TimeInterval.init(exactly: 140)!, message: "Hello world 3"))
-        messages.append(Message(from: "2", to: "1", timestamp: TimeInterval.init(exactly: 160)!, message: "Hello world 4"))
-        messages = messages.sorted{ $0.timestamp <= $1.timestamp }
         
         tblMessage.transform = CGAffineTransform(scaleX: 1, y: -1)
         
@@ -64,7 +70,7 @@ class ViewController: UIViewController {
     @IBAction func btnSendAction(_ sender: Any) {
         let msg = Message(from: "1", to: "2", timestamp: Date().timeIntervalSince1970, message: txvMessageContent.text)
         messages.append(msg)
-        tblMessage.reloadData()
+        self.tblMessage.reloadData()
         txvMessageContent.text = ""
         btnSend.isEnabled = false
     }
@@ -136,7 +142,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
             alert.addAction(btnCancel)
             self.present(alert, animated: true, completion: nil)
         }
-        //editAction.image = UIImage(named: "edit")
         editAction.backgroundColor = UIColor.blue
         
         let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, handler) in
@@ -144,7 +149,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
             tableView.deleteRows(at: [indexPath], with: .automatic)
             handler(true)
         }
-        //deleteAction.image = UIImage(named: "delete")
         deleteAction.backgroundColor = UIColor.red
         return UISwipeActionsConfiguration(actions: [editAction, deleteAction])
     }
@@ -175,6 +179,34 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource, UITextView
             btnSend.isEnabled = true
         } else {
             btnSend.isEnabled = false
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let height = scrollView.frame.size.height
+        let contentYoffset = scrollView.contentOffset.y
+        let distanceFromBottom = scrollView.contentSize.height - contentYoffset
+        if distanceFromBottom < height {
+            spinner = UIActivityIndicatorView(style: .gray)
+            spinner.startAnimating()
+            spinner.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
+            tblMessage.tableFooterView = spinner
+            tblMessage.tableFooterView?.isHidden = false
+            if let addMessage = self.mockMessage.getMessage(limit: limit, page: page), !addMessage.isEmpty {
+                print(limit, page)
+                print(mockMessage.serverMessage)
+                self.messages += addMessage
+                self.messages = self.messages.sorted{ $0.timestamp <= $1.timestamp }
+                page += 1
+                Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { (timer) in
+                    self.tblMessage.reloadData()
+                    self.spinner.stopAnimating()
+                }
+            } else {
+                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { (timer) in
+                    self.spinner.stopAnimating()
+                }
+            }
         }
     }
 }

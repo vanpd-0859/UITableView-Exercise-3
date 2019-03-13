@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A7071F042238F6EA002E2665 /* MockMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7071F032238F6EA002E2665 /* MockMessage.swift */; };
 		A7AD4A61223770AF004E527C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AD4A60223770AF004E527C /* AppDelegate.swift */; };
 		A7AD4A66223770AF004E527C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A7AD4A64223770AF004E527C /* Main.storyboard */; };
 		A7AD4A68223770AF004E527C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A7AD4A67223770AF004E527C /* Assets.xcassets */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A7071F032238F6EA002E2665 /* MockMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMessage.swift; sourceTree = "<group>"; };
 		A7AD4A5D223770AF004E527C /* UITableView-02.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "UITableView-02.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7AD4A60223770AF004E527C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A7AD4A65223770AF004E527C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 				A7AD4A782237889C004E527C /* receivingMessageCell.swift */,
 				A7AD4A7A223788A9004E527C /* sendingMessageCell.swift */,
 				A7AD4A7E22378FFE004E527C /* Message.swift */,
+				A7071F032238F6EA002E2665 /* MockMessage.swift */,
 			);
 			path = "UITableView-02";
 			sourceTree = "<group>";
@@ -147,6 +150,7 @@
 				A7AD4A7B223788A9004E527C /* sendingMessageCell.swift in Sources */,
 				A7AD4A792237889C004E527C /* receivingMessageCell.swift in Sources */,
 				A7AD4A7F22378FFE004E527C /* Message.swift in Sources */,
+				A7071F042238F6EA002E2665 /* MockMessage.swift in Sources */,
 				A7AD4A73223782EF004E527C /* ViewController.swift in Sources */,
 				A7AD4A61223770AF004E527C /* AppDelegate.swift in Sources */,
 			);
